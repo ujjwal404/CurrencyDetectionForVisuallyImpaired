@@ -10,7 +10,7 @@ def _parse_function(filename, label, size):
         - Decode the image from jpeg format
         - Convert to float and to range [0, 1]
     """
-    image_string = tf.read_file(filename)
+    image_string = tf.io.read_file(filename)
 
     # Don't use tf.image.decode_image, or the output shape will be undefined
     image_decoded = tf.image.decode_jpeg(image_string, channels=3)
@@ -18,7 +18,7 @@ def _parse_function(filename, label, size):
     # This will convert to float values in [0, 1]
     image = tf.image.convert_image_dtype(image_decoded, tf.float32)
 
-    resized_image = tf.image.resize_images(image, [size, size])
+    resized_image = tf.image.resize(image, [size, size])
 
     return resized_image, label
 
@@ -43,6 +43,7 @@ def train_preprocess(image, label, use_random_flip):
 
 
 def input_fn(is_training, filenames, labels, params):
+    tf.compat.v1.disable_eager_execution()
     """Input function for the SIGNS dataset.
 
     The filenames have format "{label}_IMG_{id}.jpg".
@@ -79,7 +80,8 @@ def input_fn(is_training, filenames, labels, params):
         )
 
     # Create reinitializable iterator from dataset
-    iterator = dataset.make_initializable_iterator()
+    
+    iterator = tf.compat.v1.data.make_initializable_iterator(dataset)
     images, labels = iterator.get_next()
     iterator_init_op = iterator.initializer
 

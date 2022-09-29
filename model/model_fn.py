@@ -28,27 +28,27 @@ def build_model(is_training, inputs, params):
     channels = [num_channels, num_channels * 2, num_channels * 4, num_channels * 8, num_channels * 16]
     
     # L2 regulariazation
-    regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
+    regularizer = tf.keras.regularizers.L2(0.1)
     for i, c in enumerate(channels):
-        with tf.variable_scope('block_{}'.format(i+1)):
-            out = tf.layers.conv2d(out, c, 3, padding='same', kernel_regularizer=regularizer)
+        with tf.compat.v1.variable_scope('block_{}'.format(i+1)):
+            out = tf.keras.layers.Conv2D(out, c, 3, padding='same', kernel_regularizer=regularizer)
             if params.use_batch_norm:
-                out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
+                out = tf.keras.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
             out = tf.nn.relu(out)
-            out = tf.layers.max_pooling2d(out, 2, 2)
+            out = tf.keras.layers.max_pooling2d(out, 2, 2)
             print(out.get_shape().as_list())
     
     # assert out.get_shape().as_list() == [None, 8, 8, num_channels * 8]
 
     out = tf.reshape(out, [-1, 4 * 4 * num_channels * 16])
 
-    with tf.variable_scope('fc_1'):
-        out = tf.layers.dense(out, num_channels * 16)
+    with tf.compat.v1.variable_scope('fc_1'):
+        out = tf.keras.layers.dense(out, num_channels * 16)
         if params.use_batch_norm:
-            out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
+            out = tf.keras.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
         out = tf.nn.relu(out)
-    with tf.variable_scope('fc_2'):
-        logits = tf.layers.dense(out, params.num_labels)
+    with tf.compat.v1.variable_scope('fc_2'):
+        logits = tf.keras.layers.dense(out, params.num_labels)
 
     return logits
 
@@ -72,7 +72,7 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
-    with tf.variable_scope('model', reuse=reuse):
+    with tf.compat.v1.variable_scope('model', reuse=reuse):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
         predictions = tf.argmax(logits, 1)
@@ -96,7 +96,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # -----------------------------------------------------------
     # METRICS AND SUMMARIES
     # Metrics for evaluation using tf.metrics (average over whole dataset)
-    with tf.variable_scope("metrics"):
+    with tf.compat.v1.variable_scope("metrics"):
         metrics = {
             'accuracy': tf.metrics.accuracy(labels=labels, predictions=tf.argmax(logits, 1)),
             'loss': tf.metrics.mean(loss)

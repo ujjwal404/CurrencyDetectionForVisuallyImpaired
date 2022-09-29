@@ -58,3 +58,10 @@ if __name__ == '__main__':
 
     logging.info("Starting evaluation")
     evaluate(model_spec, args.model_dir, params, args.restore_from)
+
+"""
+20_sjdfhajks.jpg 
+200_sadjhfgk.jpg
+
+
+"""

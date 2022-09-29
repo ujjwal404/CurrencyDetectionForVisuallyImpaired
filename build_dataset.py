@@ -31,9 +31,12 @@ if __name__ == '__main__':
 
     # Get the filenames in dataset directory
     filenames = os.listdir(args.data_dir)
+    
     filenames = [os.path.join(args.data_dir, f) for f in filenames if f.endswith('.jpg')]
 
-    # split the images in 'currenct' into 80% train, 10% dev 10% test
+    
+
+    # split the images in 'currency' into 80% train, 10% dev 10% test
     # make sure to always shuffle with a fixed seed so that spllit is reproducible
     random.seed(230)
     filenames.sort()
