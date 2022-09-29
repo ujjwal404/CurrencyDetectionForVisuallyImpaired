@@ -82,6 +82,7 @@ class CNN(tf.keras.Model):
     def fit_dataset(self, train_data, eval_data, epochs, batch_size):
 
         for epoch in range(epochs):
+            # total 8659 images in train folder, 32 batches, 270 steps per epoch
             for step, (x, y) in enumerate(train_data):
                 with tf.GradientTape() as tape:
                     logits = self.predict(x, training=True)

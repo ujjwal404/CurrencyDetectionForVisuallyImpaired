@@ -71,18 +71,6 @@ def build_model_two(train_data, eval_data, params):
 
 
 def model_fn(mode, inputs, params, reuse=False):
-    """Model function defining the graph operations.
-
-    Args:
-        mode: (string) can be 'train' or 'eval'
-        inputs: (dict) contains the inputs of the graph (features, labels...)
-                this can be `tf.placeholder` or outputs of `tf.data`
-        params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
-        reuse: (bool) whether to reuse the weights
-
-    Returns:
-        model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
-    """
     is_training = mode == "train"
     labels = inputs["labels"]
     labels = tf.cast(labels, tf.int64)
@@ -90,7 +78,6 @@ def model_fn(mode, inputs, params, reuse=False):
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
     with tf.compat.v1.variable_scope("model", reuse=reuse):
-        # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
         predictions = tf.argmax(logits, 1)
 
