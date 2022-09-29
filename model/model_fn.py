@@ -17,6 +17,7 @@ def make_model(train_data, eval_data, params):
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"])
 
     model.fit_dataset(train_data, eval_data, epochs=params.num_epochs, batch_size=params.batch_size)
+    tf.saved_model.save(model, os.path.join(out_dir, "saved_model"))
 
 
 def build_model(is_training, inputs, params):
