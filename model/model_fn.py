@@ -2,8 +2,21 @@
 
 import tensorflow as tf
 from model.cnn import CNN
-
 import os
+
+
+def make_model(train_data, eval_data, params):
+    out_dir = os.getcwd().rsplit("/", 1)[0]
+    ckpt = os.path.join(out_dir, "experiments")
+
+    # Define optimizer.
+    optimizer = tf.optimizers.Adam()
+
+    # Instantiate model. This doesn't initialize the variables yet.
+    model = CNN(num_classes=params.num_labels + 1, checkpoint_directory=ckpt, params=params)
+    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"])
+
+    model.fit_dataset(train_data, eval_data, epochs=params.num_epochs, batch_size=params.batch_size)
 
 
 def build_model(is_training, inputs, params):
@@ -55,19 +68,6 @@ def build_model(is_training, inputs, params):
         logits = tf.compat.v1.layers.dense(out, params.num_labels)
 
     return logits
-
-
-def build_model_two(train_data, eval_data, params):
-    checkpoint_directory = os.getcwd() + "/model/checkpoints"
-
-    # Define optimizer.
-    optimizer = tf.optimizers.Adam()
-
-    # Instantiate model. This doesn't initialize the variables yet.
-    model = CNN(num_classes=2001, checkpoint_directory=checkpoint_directory)
-    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"])
-
-    model.fit_dataset(train_data, eval_data, epochs=300, batch_size=32)
 
 
 def model_fn(mode, inputs, params, reuse=False):

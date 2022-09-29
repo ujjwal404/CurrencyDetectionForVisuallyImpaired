@@ -8,16 +8,19 @@ import tensorflow as tf
 
 from model.utils import Params
 from model.utils import set_logger
-from model.model_fn import build_model_two
 from model.input_fn import input_fn
+from model.model_fn import make_model
+from sklearn.preprocessing import LabelEncoder
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--model_dir", default="experiments/smaller_model/4_ConvBlock", help="Experiment directory containing params.json"
 )
-parser.add_argument(
-    "--data_dir", default="/Users/ujjwal/Documents/data/224x224_currency", help="Directory containing the dataset"
-)
+
+data_directory = os.getcwd().rsplit("/", 1)[0] + "/data/224x224_currency"
+print(data_directory)
+
+parser.add_argument("--data_dir", default=data_directory, help="Directory containing the dataset")
 parser.add_argument(
     "--restore_from", default=None, help="Optional, directory or file containing weights to reload before training"
 )
@@ -56,19 +59,26 @@ if __name__ == "__main__":
     train_labels = [int(f.split("/")[-1].split("_")[0]) for f in train_filenames]
     eval_labels = [int(f.split("/")[-1].split("_")[0]) for f in eval_filenames]
 
+    labelencoder = LabelEncoder()
+    train_labels = labelencoder.fit_transform(train_labels)
+    eval_labels = labelencoder.fit_transform(eval_labels)
+
     # Specify the sizes of the dataset we train on and evaluate on
     params.train_size = len(train_filenames)
     params.eval_size = len(eval_filenames)
+
+    train_labels = tf.cast(train_labels, tf.int32)
+    eval_labels = tf.cast(eval_labels, tf.int32)
 
     # Create the two iterators over the two datasets [tensors are returned by the input_fn with images, labels and iterator]
 
     train_inputs = input_fn(True, train_filenames, train_labels, params)
     eval_inputs = input_fn(False, eval_filenames, eval_labels, params)
-
-    build_model_two(train_inputs, eval_inputs, params)
+    logging.info("Creating the model...")
+    make_model(train_inputs, eval_inputs, params)
 """
     # Define the model
-    logging.info("Creating the model...")
+    
     train_model_spec = model_fn('train', train_inputs, params)
     #eval_model_spec = model_fn('eval', eval_inputs, params, reuse=True)
 

@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 class CNN(tf.keras.Model):
-    def __init__(self, num_classes, device="cpu:0", checkpoint_directory=None):
+    def __init__(self, num_classes, device="cpu:0", checkpoint_directory=None, params=None):
 
         super(CNN, self).__init__()
 
@@ -33,75 +33,45 @@ class CNN(tf.keras.Model):
         loss = calc(target, preds)
         return loss
 
-    def grads_fn(self, images, target, training):
-        """Dynamically computes the gradients of the loss value
-        with respect to the parameters of the model, in each
-        forward pass.
-        """
+    def grads_fn(self, x, y, training):  # runs on each batch
         with tf.GradientTape() as tape:
-            loss = self.loss_fn(images, target, training)
-        img = tf.Variable(self.variables)
-        return tape.gradient(loss, img)
+            logits = self.predict(x, training=True)
+            loss = tf.losses.sparse_categorical_crossentropy(y, logits, from_logits=True)
+            loss = tf.reduce_mean(loss)
+        grads = tape.gradient(loss, self.trainable_variables)
+        return grads, loss
 
     def restore_model(self):
         """Function to restore trained model."""
-        with tf.compat.v1.Session() as sess:
-            with tf.device(self.device):
-                # Run the model once to initialize variables
-                dummy_input = tf.zeros((1, 48, 48, 1))
-                dummy_pred = self.predict(dummy_input, training=False)
-                # Restore the variables of the model
-                saver = tf.compat.v1.train.Saver(self.variables)
-                saver.restore(sess, tf.train.latest_checkpoint(self.checkpoint_directory))
 
     def save_model(self, global_step=0):
-        with tf.compat.v1.Session() as sess:
-            tf.compat.v1.train.Saver(self.variables).save(sess, self.checkpoint_directory, global_step=global_step)
+        """function to save model"""
 
-    def compute_accuracy(self, input_data):
-        """Compute the accuracy on the input data."""
-        with tf.device(self.device):
-            acc = tf.metrics.Accuracy()
-            for images, targets in iter(input_data):
-                # Predict the probability of each class
-                logits = self.predict(images, training=False)
-                # Select the class with the highest probability
-                preds = tf.argmax(logits, axis=1)
-                # Compute the accuracy
-                acc(
-                    tf.reshape(
-                        targets,
-                        [
-                            -1,
-                        ],
-                    ),
-                    preds,
-                )
-        return acc
+    def compute_accuracy(self, eval_data):
+        total, total_correct = 0.0, 0
+
+        for x, y in eval_data:
+            logits = self.predict(x, training=False)
+            prob = tf.nn.softmax(logits, axis=1)
+            pred = tf.argmax(prob, axis=1)
+            pred = tf.cast(pred, dtype=tf.int32)
+
+            correct = tf.cast(tf.equal(pred, y), dtype=tf.int32)
+            correct = tf.reduce_sum(correct)
+            total_correct += int(correct)
+            total += x.shape[0]
+        return total_correct / total
 
     def fit_dataset(self, train_data, eval_data, epochs, batch_size):
 
         for epoch in range(epochs):
             # total 8659 images in train folder, 32 batches, 270 steps per epoch
             for step, (x, y) in enumerate(train_data):
-                with tf.GradientTape() as tape:
-                    logits = self.predict(x, training=True)
-                    loss = tf.losses.sparse_categorical_crossentropy(y, logits, from_logits=True)
-                    loss = tf.reduce_mean(loss)
-                grads = tape.gradient(loss, self.trainable_variables)
+                grads, loss = self.grads_fn(x, y, training=True)
                 self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
                 if step % 100 == 0:
                     print(epoch, step, "loss:", float(loss))
-            total, total_correct = 0.0, 0
-            for x, y in eval_data:
-                logits = self.predict(x, training=False)
-                prob = tf.nn.softmax(logits, axis=1)
-                pred = tf.argmax(prob, axis=1)
-                pred = tf.cast(pred, dtype=tf.int32)
-                correct = tf.cast(tf.equal(pred, y), dtype=tf.int32)
-                correct = tf.reduce_sum(correct)
-                total_correct += int(correct)
-                total += x.shape[0]
-            acc = total_correct / total
+
+            acc = self.compute_accuracy(eval_data)
             print(epoch, "accuracy :", acc)
             # self.save_model(epoch)
