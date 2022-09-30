@@ -7,7 +7,7 @@
 	"use_batch_norm": true,
 	"bn_momentum": 0.9,
 
-	"image_size": 128,
+	"image_size": 224,
 	"use_random_flip": true,
 	"num_labels": 6,
 

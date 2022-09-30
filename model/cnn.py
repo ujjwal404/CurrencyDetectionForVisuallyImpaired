@@ -6,22 +6,66 @@ class CNN(tf.keras.Model):
 
         super(CNN, self).__init__()
 
-        self.cnn1 = tf.keras.layers.Conv2D(16, (5, 5), padding="same", strides=(2, 2), kernel_initializer="he_normal")
-        self.bn1 = tf.keras.layers.BatchNormalization()
-        self.cnn2 = tf.keras.layers.Conv2D(32, (5, 5), padding="same", strides=(2, 2), kernel_initializer="he_normal")
-        self.bn2 = tf.keras.layers.BatchNormalization()
-        self.pool = tf.keras.layers.GlobalAveragePooling2D()
+        self.cnn1 = tf.keras.layers.Conv2D(64, (3, 3), padding="same", activation="relu")
+        self.cnn2 = tf.keras.layers.Conv2D(64, (3, 3), padding="same", activation="relu")
+
+        self.mxpool1 = tf.keras.layers.MaxPool2D((2, 2), (2, 2), padding="same")
+
+        self.cnn3 = tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation="relu")
+        self.cnn4 = tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation="relu")
+
+        self.mxpool2 = tf.keras.layers.MaxPool2D((2, 2), (2, 2), padding="same")
+
+        self.cnn5 = tf.keras.layers.Conv2D(256, (3, 3), padding="same", activation="relu")
+        self.cnn6 = tf.keras.layers.Conv2D(256, (3, 3), padding="same", activation="relu")
+        self.cnn7 = tf.keras.layers.Conv2D(256, (3, 3), padding="same", activation="relu")
+
+        self.mxpool3 = tf.keras.layers.MaxPool2D((2, 2), (2, 2), padding="same")
+
+        self.cnn8 = tf.keras.layers.Conv2D(512, (3, 3), padding="same", activation="relu")
+        self.cnn9 = tf.keras.layers.Conv2D(512, (3, 3), padding="same", activation="relu")
+        self.cnn10 = tf.keras.layers.Conv2D(512, (3, 3), padding="same", activation="relu")
+
+        self.mxpool4 = tf.keras.layers.MaxPool2D((2, 2), (2, 2), padding="same")
+
+        self.cnn11 = tf.keras.layers.Conv2D(512, (3, 3), padding="same", activation="relu")
+        self.cnn12 = tf.keras.layers.Conv2D(512, (3, 3), padding="same", activation="relu")
+        self.cnn13 = tf.keras.layers.Conv2D(512, (3, 3), padding="same", activation="relu")
+
+        self.mxpool5 = tf.keras.layers.MaxPool2D((2, 2), (2, 2), padding="same")
+
+        self.flatten = tf.keras.layers.Flatten()
+
+        self.dense1 = tf.keras.layers.Dense(4096, activation="relu")
+        self.dense2 = tf.keras.layers.Dense(4096, activation="relu")
         self.classifier = tf.keras.layers.Dense(num_classes)
 
         self.device = device
         self.checkpoint_directory = checkpoint_directory
 
     def predict(self, inputs, training):
+        # vgg16 implementation
         x = self.cnn1(inputs)
-        x = self.bn1(x)
-        x = tf.nn.relu(x)  # layer 1
-        x = tf.nn.relu(self.bn2(self.cnn2(x)))  # layer 2
-        x = self.pool(x)
+        x = self.cnn2(x)
+        x = self.mxpool1(x)
+        x = self.cnn3(x)
+        x = self.cnn4(x)
+        x = self.mxpool2(x)
+        x = self.cnn5(x)
+        x = self.cnn6(x)
+        x = self.cnn7(x)
+        x = self.mxpool3(x)
+        x = self.cnn8(x)
+        x = self.cnn9(x)
+        x = self.cnn10(x)
+        x = self.mxpool4(x)
+        x = self.cnn11(x)
+        x = self.cnn12(x)
+        x = self.cnn13(x)
+        x = self.mxpool5(x)
+        x = self.flatten(x)
+        x = self.dense1(x)
+        x = self.dense2(x)
         output = self.classifier(x)
 
         return output
