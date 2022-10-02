@@ -2,22 +2,27 @@
 
 import tensorflow as tf
 from model.cnn import CNN
+from model.tfliteconvert import convert_to_tflite
 import os
 
 
 def make_model(train_data, eval_data, params):
     out_dir = os.getcwd().rsplit("/", 1)[0]
-    ckpt = os.path.join(out_dir, "experiments")
+    ckpt = os.path.join(out_dir, "experiments/checkpoints")
 
     # Define optimizer.
     optimizer = tf.optimizers.Adam()
 
     # Instantiate model. This doesn't initialize the variables yet.
     model = CNN(num_classes=params.num_labels + 1, checkpoint_directory=ckpt, params=params)
+    # compile model. This initializes the variables.
     model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"])
 
-    model.fit_dataset(train_data, eval_data, epochs=params.num_epochs, batch_size=params.batch_size)
+    model.fit_dataset(train_data, eval_data)
+    # save the model
     tf.saved_model.save(model, os.path.join(out_dir, "saved_model"))
+    # convert to tflite model
+    convert_to_tflite(out_dir)
 
 
 def build_model(is_training, inputs, params):

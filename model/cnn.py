@@ -1,4 +1,5 @@
 import tensorflow as tf
+import os
 
 
 class CNN(tf.keras.Model):
@@ -41,7 +42,9 @@ class CNN(tf.keras.Model):
         self.classifier = tf.keras.layers.Dense(num_classes)
 
         self.device = device
-        self.checkpoint_directory = checkpoint_directory
+        self.checkpoint = tf.train.Checkpoint(model=self)
+        self.checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
+        self.params = params
 
     def predict(self, inputs, training):
         # vgg16 implementation
@@ -90,6 +93,7 @@ class CNN(tf.keras.Model):
 
     def save_model(self, global_step=0):
         """function to save model"""
+        self.checkpoint.save(file_prefix=self.checkpoint_prefix, global_step=global_step)
 
     def compute_accuracy(self, eval_data):
         total, total_correct = 0.0, 0
@@ -106,9 +110,9 @@ class CNN(tf.keras.Model):
             total += x.shape[0]
         return total_correct / total
 
-    def fit_dataset(self, train_data, eval_data, epochs, batch_size):
+    def fit_dataset(self, train_data, eval_data):
 
-        for epoch in range(epochs):
+        for epoch in range(self.params.num_epochs):
             # total 8659 images in train folder, 32 batches, 270 steps per epoch
             for step, (x, y) in enumerate(train_data):
                 grads, loss = self.grads_fn(x, y, training=True)
@@ -118,4 +122,4 @@ class CNN(tf.keras.Model):
 
             acc = self.compute_accuracy(eval_data)
             print(epoch, "accuracy :", acc)
-            # self.save_model(epoch)
+            self.save_model()
