@@ -14,9 +14,9 @@ def make_model(train_data, eval_data, params):
     optimizer = tf.optimizers.Adam()
 
     # Instantiate model. This doesn't initialize the variables yet.
-    model = CNN(num_classes=params.num_labels + 1, checkpoint_directory=ckpt, params=params)
+    model = CNN(num_classes=params.num_labels, checkpoint_directory=ckpt, params=params)
     # compile model. This initializes the variables.
-    model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
     model.fit_dataset(train_data, eval_data)
     # save the model

@@ -1,5 +1,6 @@
 import tensorflow as tf
 import os
+import time
 
 
 class CNN(tf.keras.Model):
@@ -61,20 +62,8 @@ class CNN(tf.keras.Model):
 
         return output
 
-    # def loss_fn(self, images, target, training):
-    #     preds = self.predict(images, training)
-    #     print(images.shape, preds.shape)
-    #     calc = tf.keras.losses.SparseCategoricalCrossentropy()
-    #     loss = calc(target, preds)
-    #     return loss
-
-    def grads_fn(self, x, y, training):  # runs on each batch
-        with tf.GradientTape() as tape:
-            logits = self.predict(x, training=True)
-            loss = tf.losses.sparse_categorical_crossentropy(y, logits, from_logits=True)
-            loss = tf.reduce_mean(loss)
-        grads = tape.gradient(loss, self.trainable_variables)
-        return grads, loss
+    def loss_fn(self, y, logits):
+        return tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y, logits)
 
     def restore_model(self):
         """Function to restore trained model."""
@@ -99,15 +88,45 @@ class CNN(tf.keras.Model):
         return total_correct / total
 
     def fit_dataset(self, train_data, eval_data):
+        # Prepare the metrics.
+        train_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
+        val_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
 
         for epoch in range(self.params.num_epochs):
+            print("\nStart of epoch %d" % (epoch,))
+            start_time = time.time()
             # total 8659 images in train folder, 32 batches, 270 steps per epoch
             for step, (x, y) in enumerate(train_data):
-                grads, loss = self.grads_fn(x, y, training=True)
-                self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
-                if step % 100 == 0:
-                    print(epoch, step, "loss:", float(loss))
+                with tf.GradientTape() as tape:
+                    logits = self.predict(x, training=True)
 
-            acc = self.compute_accuracy(eval_data)
-            print(epoch, "accuracy :", acc)
+                    # Compute the loss value for this minibatch.
+                    loss_value = self.loss_fn(y, logits)
+                    loss = tf.reduce_mean(loss_value)
+                grads = tape.gradient(loss_value, self.trainable_variables)
+                self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+
+                # Update training metric.
+                train_acc_metric.update_state(y, logits)
+
+                if step % 100 == 0:
+                    print("Training loss (for one batch) at step %d: %.4f" % (step, float(loss_value)))
+                    print("Seen so far: %s samples" % ((step + 1) * self.params.batch_size))
+
+                    # Display metrics at the end of each epoch.
+            train_acc = train_acc_metric.result()
+            print("Training acc over epoch: %.4f" % (float(train_acc),))
+
+            # Reset training metrics at the end of each epoch
+            train_acc_metric.reset_states()
+
+            # Run a validation loop at the end of each epoch.
+            for x_batch_val, y_batch_val in enumerate(eval_data):
+                val_logits = self.predict(x_batch_val, training=False)
+                # Update val metrics
+                val_acc_metric.update_state(y_batch_val, val_logits)
+            val_acc = val_acc_metric.result()
+            val_acc_metric.reset_states()
+            print("Validation acc: %.4f" % (float(val_acc),))
+            print("Time taken: %.2fs" % (time.time() - start_time))
             self.save_model()
