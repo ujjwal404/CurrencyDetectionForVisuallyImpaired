@@ -81,7 +81,7 @@ class CNN(tf.keras.Model):
 
     def save_model(self, global_step=0):
         """function to save model"""
-        self.checkpoint.save(file_prefix=self.checkpoint_prefix, global_step=global_step)
+        self.checkpoint.save(self.checkpoint_prefix)
 
     def compute_accuracy(self, eval_data):
         total, total_correct = 0.0, 0
