@@ -1,4 +1,5 @@
 import tensorflow as tf
+import matplotlib.pyplot as plt
 import os
 import time
 
@@ -55,9 +56,11 @@ class CNN(tf.keras.Model):
         x = self.maxpool3(x)
         x = self.flatten1(x)
         x = self.dense1(x)
-        x = self.dropout1(x, training=training)
+        if training == True:
+            x = self.dropout1(x, training=training)
         x = self.dense2(x)
-        x = self.dropout2(x, training=training)
+        if training == True:
+            x = self.dropout2(x, training=training)
         output = self.classifier(x)
 
         return output
@@ -87,10 +90,26 @@ class CNN(tf.keras.Model):
             total += x.shape[0]
         return total_correct / total
 
+    def visualize(self, train_loss_results, train_accuracy_results):
+        fig, axes = plt.subplots(2, sharex=True, figsize=(12, 8))
+        fig.suptitle("Training Metrics")
+
+        axes[0].set_ylabel("Loss", fontsize=14)
+        axes[0].plot(train_loss_results)
+
+        axes[1].set_ylabel("Accuracy", fontsize=14)
+        axes[1].set_xlabel("Epoch", fontsize=14)
+        axes[1].plot(train_accuracy_results)
+        plt.show()
+
     def fit_dataset(self, train_data, eval_data):
+        train_loss_results = []
+        train_accuracy_results = []
+
         # Prepare the metrics.
         train_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
         val_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
+        epoch_loss_avg = tf.keras.metrics.Mean()
 
         for epoch in range(self.params.num_epochs):
             print("\nStart of epoch %d" % (epoch,))
@@ -102,12 +121,13 @@ class CNN(tf.keras.Model):
 
                     # Compute the loss value for this minibatch.
                     loss_value = self.loss_fn(y, logits)
-                    loss = tf.reduce_mean(loss_value)
+
                 grads = tape.gradient(loss_value, self.trainable_variables)
                 self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
 
                 # Update training metric.
                 train_acc_metric.update_state(y, logits)
+                epoch_loss_avg.update_state(loss_value)
 
                 if step % 100 == 0:
                     print("Training loss (for one batch) at step %d: %.4f" % (step, float(loss_value)))
@@ -119,14 +139,23 @@ class CNN(tf.keras.Model):
 
             # Reset training metrics at the end of each epoch
             train_acc_metric.reset_states()
+            epoch_loss_avg.reset_states()
+
+            # put vaules in lists
+            train_loss_results.append(epoch_loss_avg.result())
+            train_accuracy_results.append(train_acc_metric.result())
 
             # Run a validation loop at the end of each epoch.
-            for x_batch_val, y_batch_val in enumerate(eval_data):
+            for step,(x_batch_val, y_batch_val) in enumerate(eval_data):
                 val_logits = self.predict(x_batch_val, training=False)
                 # Update val metrics
                 val_acc_metric.update_state(y_batch_val, val_logits)
             val_acc = val_acc_metric.result()
             val_acc_metric.reset_states()
+
             print("Validation acc: %.4f" % (float(val_acc),))
+
             print("Time taken: %.2fs" % (time.time() - start_time))
             self.save_model()
+
+        self.visualize(train_loss_results, train_accuracy_results)

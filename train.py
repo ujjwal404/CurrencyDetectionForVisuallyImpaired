@@ -9,8 +9,8 @@ import tensorflow as tf
 from model.utils import Params
 from model.utils import set_logger
 from model.input_fn import input_fn
+from model.model_fn import make_model
 from sklearn.preprocessing import LabelEncoder
-from model.cnn_test import make_model_test
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -75,8 +75,8 @@ if __name__ == "__main__":
     train_inputs = input_fn(True, train_filenames, train_labels, params)
     eval_inputs = input_fn(False, eval_filenames, eval_labels, params)
     logging.info("Creating the model...")
-    # make_model(train_inputs, eval_inputs, params)
-    make_model_test(train_inputs, eval_inputs, params)
+    make_model(train_inputs, eval_inputs, params)
+    # make_model_test(train_inputs, eval_inputs, params)
 """
     # Define the model
     

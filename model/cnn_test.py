@@ -20,7 +20,7 @@ class Image_CNN(Model):
 
         self.flatten = Flatten()
         self.d128 = Dense(128, activation="relu")
-        self.d10softmax = Dense(10, activation="softmax")
+        self.d10softmax = Dense(7)
 
     def call(self, x, training=False):
         x = self.conv1(x)
