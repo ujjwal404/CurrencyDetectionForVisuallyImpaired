@@ -30,7 +30,7 @@ class CNN(tf.keras.Model):
         self.dropout1 = tf.keras.layers.Dropout(0.5)
         self.dense2 = tf.keras.layers.Dense(4096, activation="relu")
         self.dropout2 = tf.keras.layers.Dropout(0.5)
-        self.classifier = tf.keras.layers.Dense(num_classes, activation="softmax")
+        self.classifier = tf.keras.layers.Dense(num_classes)
 
         self.device = device
         self.checkpoint = tf.train.Checkpoint(model=self)
