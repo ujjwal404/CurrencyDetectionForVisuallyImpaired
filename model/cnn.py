@@ -61,12 +61,12 @@ class CNN(tf.keras.Model):
 
         return output
 
-    def loss_fn(self, images, target, training):
-        preds = self.predict(images, training)
-        print(images.shape, preds.shape)
-        calc = tf.keras.losses.SparseCategoricalCrossentropy()
-        loss = calc(target, preds)
-        return loss
+    # def loss_fn(self, images, target, training):
+    #     preds = self.predict(images, training)
+    #     print(images.shape, preds.shape)
+    #     calc = tf.keras.losses.SparseCategoricalCrossentropy()
+    #     loss = calc(target, preds)
+    #     return loss
 
     def grads_fn(self, x, y, training):  # runs on each batch
         with tf.GradientTape() as tape:
