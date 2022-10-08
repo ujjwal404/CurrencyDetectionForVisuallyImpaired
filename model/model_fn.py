@@ -1,9 +1,9 @@
 """Define the model."""
 
 import tensorflow as tf
-from model.cnn import CNN
 import os
 from model.tfliteconvert import convert_to_tflite
+from model.cnn import CNN
 
 
 def make_model(train_data, eval_data, params):
@@ -16,13 +16,15 @@ def make_model(train_data, eval_data, params):
     # Instantiate model. This doesn't initialize the variables yet.
     model = CNN(num_classes=params.num_labels, checkpoint_directory=ckpt, params=params)
     # compile model. This initializes the variables.
-    model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    model.compile()
 
     model.fit_dataset(train_data, eval_data)
-    # save the model
-    tf.saved_model.save(model, os.path.join(out_dir, "saved_model"))
+    # # save the model
+    model.save("model_v1")
     # convert to tflite model
-    convert_to_tflite(os.path.join(out_dir, "saved_model"))
+    save_path = os.path.join(out_dir, "saved_model")
+    print(save_path)
+    # convert_to_tflite(save_path)
 
 
 def build_model(is_training, inputs, params):

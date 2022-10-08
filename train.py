@@ -10,6 +10,7 @@ from model.utils import Params
 from model.utils import set_logger
 from model.input_fn import input_fn
 from model.model_fn import make_model
+
 from sklearn.preprocessing import LabelEncoder
 
 parser = argparse.ArgumentParser()
