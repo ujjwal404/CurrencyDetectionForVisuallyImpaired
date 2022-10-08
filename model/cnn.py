@@ -5,34 +5,46 @@ import time
 
 
 class CNN(tf.keras.Model):
-    def __init__(self, num_classes, device="cpu:0", checkpoint_directory=None, params=None):
+    def __init__(self, num_classes, device="gpu:0", checkpoint_directory=None, params=None):
 
         super(CNN, self).__init__()
         # alexnet implementation
-        self.cnn1 = tf.keras.layers.Conv2D(filters=96, kernel_size=11, strides=4, activation="relu")
-        self.bn1 = tf.keras.layers.BatchNormalization()
-        self.maxpool1 = tf.keras.layers.MaxPool2D(pool_size=3, strides=2)
+        # self.cnn1 = tf.keras.layers.Conv2D(filters=96, kernel_size=11, strides=4, activation="relu")
+        # self.bn1 = tf.keras.layers.BatchNormalization()
+        # self.maxpool1 = tf.keras.layers.MaxPool2D(pool_size=3, strides=2)
 
-        self.cnn2 = tf.keras.layers.Conv2D(filters=256, kernel_size=5, strides=1, activation="relu")
-        self.bn2 = tf.keras.layers.BatchNormalization()
-        self.maxpool2 = tf.keras.layers.MaxPool2D(pool_size=3, strides=2)
+        # self.cnn2 = tf.keras.layers.Conv2D(filters=256, kernel_size=5, strides=1, activation="relu")
+        # self.bn2 = tf.keras.layers.BatchNormalization()
+        # self.maxpool2 = tf.keras.layers.MaxPool2D(pool_size=3, strides=2)
 
-        self.cnn3 = tf.keras.layers.Conv2D(filters=384, kernel_size=3, strides=1, activation="relu")
-        self.bn3 = tf.keras.layers.BatchNormalization()
+        # self.cnn3 = tf.keras.layers.Conv2D(filters=384, kernel_size=3, strides=1, activation="relu")
+        # self.bn3 = tf.keras.layers.BatchNormalization()
 
-        self.cnn4 = tf.keras.layers.Conv2D(filters=384, kernel_size=3, strides=1, activation="relu")
-        self.bn4 = tf.keras.layers.BatchNormalization()
+        # self.cnn4 = tf.keras.layers.Conv2D(filters=384, kernel_size=3, strides=1, activation="relu")
+        # self.bn4 = tf.keras.layers.BatchNormalization()
 
-        self.cnn5 = tf.keras.layers.Conv2D(filters=256, kernel_size=3, strides=1, activation="relu")
-        self.bn5 = tf.keras.layers.BatchNormalization()
+        # self.cnn5 = tf.keras.layers.Conv2D(filters=256, kernel_size=3, strides=1, activation="relu")
+        # self.bn5 = tf.keras.layers.BatchNormalization()
 
-        self.maxpool3 = tf.keras.layers.MaxPool2D(pool_size=3, strides=2)
-        self.flatten1 = tf.keras.layers.Flatten()
-        self.dense1 = tf.keras.layers.Dense(4096, activation="relu")
-        self.dropout1 = tf.keras.layers.Dropout(0.5)
-        self.dense2 = tf.keras.layers.Dense(4096, activation="relu")
-        self.dropout2 = tf.keras.layers.Dropout(0.5)
-        self.classifier = tf.keras.layers.Dense(num_classes)
+        # self.maxpool3 = tf.keras.layers.MaxPool2D(pool_size=3, strides=2)
+        # self.flatten1 = tf.keras.layers.Flatten()
+        # self.dense1 = tf.keras.layers.Dense(4096, activation="relu")
+        # self.dropout1 = tf.keras.layers.Dropout(0.5)
+        # self.dense2 = tf.keras.layers.Dense(4096, activation="relu")
+        # self.dropout2 = tf.keras.layers.Dropout(0.5)
+        # self.classifier = tf.keras.layers.Dense(num_classes)
+
+        self.conv1 = tf.keras.layers.Conv2D(32, 3, input_shape=(..., 3), strides=1, activation="relu")
+        self.conv2 = tf.keras.layers.Conv2D(32, 3, strides=1, activation="relu")
+        self.conv3 = tf.keras.layers.Conv2D(32, 5, strides=2, activation="relu")
+
+        self.pool1 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))
+        self.batchnorm = tf.keras.layers.BatchNormalization()
+        self.dropout40 = tf.keras.layers.Dropout(rate=0.4)
+
+        self.flatten = tf.keras.layers.Flatten()
+        self.d128 = tf.keras.layers.Dense(128, activation="relu")
+        self.d7 = tf.keras.layers.Dense(7)
 
         self.device = device
         self.checkpoint = tf.train.Checkpoint(model=self)
@@ -42,12 +54,12 @@ class CNN(tf.keras.Model):
 
     def predict(self, inputs, training):
         # alexnet implementation
-        x = self.cnn1(inputs)
-        x = self.bn1(x, training=training)
-        x = self.maxpool1(x)
-        x = self.cnn2(x)
-        x = self.bn2(x, training=training)
-        x = self.maxpool2(x)
+        # x = self.cnn1(inputs)
+        # x = self.bn1(x, training=training)
+        # x = self.maxpool1(x)
+        # x = self.cnn2(x)
+        # x = self.bn2(x, training=training)
+        # x = self.maxpool2(x)
         # x = self.cnn3(x)
         # x = self.bn3(x, training=training)
         # x = self.cnn4(x)
@@ -55,10 +67,25 @@ class CNN(tf.keras.Model):
         # x = self.cnn5(x)
         # x = self.bn5(x, training=training)
         # x = self.maxpool3(x)
-        x = self.flatten1(x)
-        x = self.dense1(x)
-        x = self.dropout1(x, training=training)
-        x = self.dense2(x)
+        # x = self.flatten1(x)
+        # x = self.dense1(x)
+        # x = self.dropout1(x, training=training)
+        # x = self.dense2(x)
+
+        x = self.conv1(inputs)
+        x = self.pool1(x)
+        x = self.conv2(x)
+        x = self.pool1(x)
+        x = self.conv3(x)
+        x = self.batchnorm(x)
+        if training:
+            x = self.dropout40(x, training=training)
+
+        x = self.flatten(x)
+        x = self.d128(x)
+        x = self.d7(x)
+
+        return x
         # x = self.dropout2(x, training=training)
         output = self.classifier(x)
 
