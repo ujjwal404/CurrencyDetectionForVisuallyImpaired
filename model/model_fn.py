@@ -2,8 +2,8 @@
 
 import tensorflow as tf
 from model.cnn import CNN
-from model.tfliteconvert import convert_to_tflite
 import os
+from model.tfliteconvert import convert_to_tflite
 
 
 def make_model(train_data, eval_data, params):
@@ -22,7 +22,7 @@ def make_model(train_data, eval_data, params):
     # save the model
     tf.saved_model.save(model, os.path.join(out_dir, "saved_model"))
     # convert to tflite model
-    convert_to_tflite(out_dir)
+    convert_to_tflite(os.path.join(out_dir, "saved_model"))
 
 
 def build_model(is_training, inputs, params):

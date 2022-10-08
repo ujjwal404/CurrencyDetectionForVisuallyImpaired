@@ -36,6 +36,7 @@ class CNN(tf.keras.Model):
 
         self.device = device
         self.checkpoint = tf.train.Checkpoint(model=self)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
         self.checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
         self.params = params
 
@@ -47,20 +48,18 @@ class CNN(tf.keras.Model):
         x = self.cnn2(x)
         x = self.bn2(x, training=training)
         x = self.maxpool2(x)
-        x = self.cnn3(x)
-        x = self.bn3(x, training=training)
-        x = self.cnn4(x)
-        x = self.bn4(x, training=training)
-        x = self.cnn5(x)
-        x = self.bn5(x, training=training)
-        x = self.maxpool3(x)
+        # x = self.cnn3(x)
+        # x = self.bn3(x, training=training)
+        # x = self.cnn4(x)
+        # x = self.bn4(x, training=training)
+        # x = self.cnn5(x)
+        # x = self.bn5(x, training=training)
+        # x = self.maxpool3(x)
         x = self.flatten1(x)
         x = self.dense1(x)
-        if training == True:
-            x = self.dropout1(x, training=training)
+        x = self.dropout1(x, training=training)
         x = self.dense2(x)
-        if training == True:
-            x = self.dropout2(x, training=training)
+        # x = self.dropout2(x, training=training)
         output = self.classifier(x)
 
         return output
@@ -137,16 +136,16 @@ class CNN(tf.keras.Model):
             train_acc = train_acc_metric.result()
             print("Training acc over epoch: %.4f" % (float(train_acc),))
 
-            # Reset training metrics at the end of each epoch
-            train_acc_metric.reset_states()
-            epoch_loss_avg.reset_states()
-
             # put vaules in lists
             train_loss_results.append(epoch_loss_avg.result())
             train_accuracy_results.append(train_acc_metric.result())
 
+            # Reset training metrics at the end of each epoch
+            train_acc_metric.reset_states()
+            epoch_loss_avg.reset_states()
+
             # Run a validation loop at the end of each epoch.
-            for step,(x_batch_val, y_batch_val) in enumerate(eval_data):
+            for step, (x_batch_val, y_batch_val) in enumerate(eval_data):
                 val_logits = self.predict(x_batch_val, training=False)
                 # Update val metrics
                 val_acc_metric.update_state(y_batch_val, val_logits)
