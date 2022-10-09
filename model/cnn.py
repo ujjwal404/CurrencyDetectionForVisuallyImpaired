@@ -28,7 +28,7 @@ class CNN(tf.keras.Model):
 
     def predict(self, inputs, training):
 
-        x = self.conv1(x)
+        x = self.conv1(inputs)
         x = self.pool1(x)
         x = self.conv2(x)
         x = self.pool1(x)
