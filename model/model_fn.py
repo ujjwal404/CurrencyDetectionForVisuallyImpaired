@@ -9,21 +9,19 @@ def make_model(train_data, eval_data, params):
     out_dir = os.getcwd().rsplit("/", 1)[0]
     ckpt = os.path.join(os.getcwd(), "experiments/checkpoints")
 
-    # Define optimizer.
-    optimizer = tf.optimizers.Adam()
-
     # Instantiate model. This doesn't initialize the variables yet.
     model = CNN(num_classes=params.num_labels, checkpoint_directory=ckpt, params=params)
     # compile model. This initializes the variables.
-    model.compile()
+    model.compile(
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=params.learning_rate),
+    )
 
     model.fit_dataset(train_data, eval_data)
     # # save the model
-    model.save("model_v1")
-    # convert to tflite model
-    save_path = os.path.join(out_dir, "saved_model")
-    print(save_path)
-    # convert_to_tflite(save_path)
+    model.save_weights("experiments/saved_weights/weight", save_format="tf")
+
+    print("MODEL WEIGHTS SAVED")
 
 
 def build_model(is_training, inputs, params):

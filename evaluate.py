@@ -1,70 +1,41 @@
-"""Evaluate the model"""
-
-import argparse
-import logging
 import os
-from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
+from sklearn.preprocessing import LabelEncoder
 
 from model.utils import Params
-from model.utils import set_logger
+from model.input_fn import input_fn
+from model.cnn import CNN
 
-
-parser = argparse.ArgumentParser()
-data_directory = os.getcwd().rsplit("/", 1)[0] + "/data/224x224_currency"
-parser.add_argument("--model_dir", default="experiments/test", help="Experiment directory containing params.json")
-parser.add_argument("--data_dir", default=data_directory, help="Directory containing the dataset")
-parser.add_argument(
-    "--restore_from", default="best_weights", help="Subdirectory of model dir or file containing the weights"
-)
-
+test_dir = os.getcwd().rsplit("/", 1)[0] + "/data/224x224_currency/test_dir"
 
 if __name__ == "__main__":
-    # Set the random seed for the whole graph
-    tf.set_random_seed(230)
-
-    # Load the parameters
-    args = parser.parse_args()
+    # get params
     json_path = "model/params.json"
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
-    # Set the logger
-    set_logger(os.path.join(args.model_dir, "evaluate.log"))
+    test_filenames = [os.path.join(test_dir, f) for f in os.listdir(test_dir) if f.endswith(".jpg")]
+    test_labels = [int(f.split("/")[-1].split("_")[0]) for f in test_filenames]
 
-    # Create the input data pipeline
-    logging.info("Creating the dataset...")
-    data_dir = args.data_dir
-    test_data_dir = os.path.join(data_dir, "test_dir")
-
-    # Get the filenames from the test set
-    test_filenames = os.listdir(test_data_dir)
-    test_filenames = [os.path.join(test_data_dir, f) for f in test_filenames if f.endswith(".jpg")]
-
-    test_labels = [int(f.split("/")[-1][0]) for f in test_filenames]
+    params.test_size = len(test_filenames)
 
     labelencoder = LabelEncoder()
     test_labels = labelencoder.fit_transform(test_labels)
 
-    # Load the model
-    model_dir = os.getcwd().rsplit("/", 1)[0] + "/saved_model"
-    model = tf.keras.models.load_model(model_dir)
+    test_labels = tf.cast(test_labels, tf.int32)
 
-    for i in range(len(test_filenames)):
-        img = tf.keras.preprocessing.image.load_img(test_filenames[i], target_size=(224, 224))
-        img_array = tf.keras.preprocessing.image.img_to_array(img)
-        img_array = tf.expand_dims(img_array, 0)
-        predictions = model.predict(img_array)
-        score = tf.nn.softmax(predictions[0])
-        print(
-            "This image most likely belongs to {} with a {:.2f} percent confidence.".format(
-                labelencoder.inverse_transform([tf.argmax(score)]), 100 * tf.reduce_max(score)
-            )
-        )
+    test_df = input_fn(False, test_filenames, test_labels, params)
 
-"""
-20_sjdfhajks.jpg 
-200_sadjhfgk.jpg
+    # EVALUATE MODEL
+    ckpt = os.path.join(os.getcwd(), "experiments/checkpoints")
 
+    # Instantiate model. This doesn't initialize the variables yet.
+    model = CNN(num_classes=params.num_labels, checkpoint_directory=ckpt, params=params)
+    model.compile(
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=params.learning_rate),
+    )
+    model.load_weights("/experiments/saved_weights/weight")
 
-"""
+    test_accuracy = model.evaluate(test_df)
+    print("Test set accuracy: {:5.2f}%".format(100 * test_accuracy))

@@ -26,7 +26,7 @@ class CNN(tf.keras.Model):
         self.checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
         self.params = params
 
-    def predict(self, inputs, training):
+    def call(self, inputs, training):
 
         x = self.conv1(inputs)
         x = self.pool1(x)
@@ -57,7 +57,7 @@ class CNN(tf.keras.Model):
         total, total_correct = 0.0, 0
 
         for x, y in eval_data:
-            logits = self.predict(x, training=False)
+            logits = self.call(x, training=False)
             prob = tf.nn.softmax(logits, axis=1)
             pred = tf.argmax(prob, axis=1)
             pred = tf.cast(pred, dtype=tf.int32)
@@ -80,7 +80,16 @@ class CNN(tf.keras.Model):
         axes[1].plot(train_accuracy_results)
         plt.show()
 
+    def evaluate(self, test_data):
+        test_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
+        for step, (x_batch_val, y_batch_val) in enumerate(test_data):
+            test_logits = self.call(x_batch_val, training=False)
+            test_acc_metric.update_state(y_batch_val, test_logits)
+        test_acc = test_acc_metric.result()
+        return test_acc
+
     def fit_dataset(self, train_data, eval_data):
+
         train_loss_results = []
         train_accuracy_results = []
 
@@ -95,7 +104,7 @@ class CNN(tf.keras.Model):
             # total 8659 images in train folder, 32 batches, 270 steps per epoch
             for step, (x, y) in enumerate(train_data):
                 with tf.GradientTape() as tape:
-                    logits = self.predict(x, training=True)
+                    logits = self.call(x, training=True)
 
                     # Compute the loss value for this minibatch.
                     loss_value = self.loss_fn(y, logits)
@@ -125,7 +134,7 @@ class CNN(tf.keras.Model):
 
             # Run a validation loop at the end of each epoch.
             for step, (x_batch_val, y_batch_val) in enumerate(eval_data):
-                val_logits = self.predict(x_batch_val, training=False)
+                val_logits = self.call(x_batch_val, training=False)
                 # Update val metrics
                 val_acc_metric.update_state(y_batch_val, val_logits)
             val_acc = val_acc_metric.result()
