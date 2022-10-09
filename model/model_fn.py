@@ -2,13 +2,12 @@
 
 import tensorflow as tf
 import os
-from model.tfliteconvert import convert_to_tflite
 from model.cnn import CNN
 
 
 def make_model(train_data, eval_data, params):
     out_dir = os.getcwd().rsplit("/", 1)[0]
-    ckpt = os.path.join(out_dir, "experiments/checkpoints")
+    ckpt = os.path.join(os.getcwd(), "experiments/checkpoints")
 
     # Define optimizer.
     optimizer = tf.optimizers.Adam()

@@ -10,16 +10,13 @@ from model.utils import Params
 from model.utils import set_logger
 from model.input_fn import input_fn
 from model.model_fn import make_model
-
 from sklearn.preprocessing import LabelEncoder
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--model_dir", default="experiments/smaller_model/4_ConvBlock", help="Experiment directory containing params.json"
-)
+parser.add_argument("--model_dir", default="experiments", help="Experiment directory containing params.json")
 
 data_directory = os.getcwd().rsplit("/", 1)[0] + "/data/224x224_currency"
-print(data_directory)
+
 
 parser.add_argument("--data_dir", default=data_directory, help="Directory containing the dataset")
 parser.add_argument(
@@ -33,7 +30,7 @@ if __name__ == "__main__":
 
     # Load the parameters from json file
     args = parser.parse_args()
-    json_path = os.path.join(args.model_dir, "params.json")
+    json_path = "model/params.json"
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
