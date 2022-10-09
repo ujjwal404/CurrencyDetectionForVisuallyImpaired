@@ -8,15 +8,6 @@ class CNN(tf.keras.Model):
     def __init__(self, num_classes, device="gpu:0", checkpoint_directory=None, params=None):
 
         super(CNN, self).__init__()
-
-        self.data_augmentation = tf.keras.Sequential(
-            [
-                tf.keras.layers.RandomFlip("horizontal", input_shape=(224, 224, 3)),
-                tf.keras.layers.RandomRotation(0.1),
-                tf.keras.layers.RandomZoom(0.1),
-            ]
-        )
-        self.rescaling = tf.keras.layers.Rescaling(1.0 / 255)
         self.conv1 = tf.keras.layers.Conv2D(32, 3, input_shape=(..., 3), strides=1, activation="relu")
         self.conv2 = tf.keras.layers.Conv2D(32, 3, strides=1, activation="relu")
         self.conv3 = tf.keras.layers.Conv2D(32, 5, strides=2, activation="relu")
@@ -36,8 +27,7 @@ class CNN(tf.keras.Model):
         self.params = params
 
     def predict(self, inputs, training):
-        x = self.data_augmentation(inputs, training=training)
-        x = self.rescaling(x)
+
         x = self.conv1(x)
         x = self.pool1(x)
         x = self.conv2(x)
