@@ -35,7 +35,8 @@ if __name__ == "__main__":
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         optimizer=tf.keras.optimizers.Adam(learning_rate=params.learning_rate),
     )
-    model.load_weights("/experiments/saved_weights/weight")
+    model_dir = os.path.join(os.getcwd(), "experiments/saved_weights/weight")
+    model.load_weights(model_dir)
 
     test_accuracy = model.evaluate(test_df)
     print("Test set accuracy: {:5.2f}%".format(100 * test_accuracy))
