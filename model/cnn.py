@@ -8,9 +8,13 @@ class CNN(tf.keras.Model):
     def __init__(self, num_classes, device="gpu:0", checkpoint_directory=None, params=None):
 
         super(CNN, self).__init__()
-        self.conv1 = tf.keras.layers.Conv2D(32, 3, input_shape=(..., 3), strides=1, activation="relu")
-        self.conv2 = tf.keras.layers.Conv2D(32, 3, strides=1, activation="relu")
-        self.conv3 = tf.keras.layers.Conv2D(32, 5, strides=2, activation="relu")
+
+        self.conv1 = tf.keras.layers.Conv2D(32, 3, input_shape=(
+            224, 224, 3), strides=1, activation="relu")
+        self.conv2 = tf.keras.layers.Conv2D(
+            32, 3, strides=1, activation="relu")
+        self.conv3 = tf.keras.layers.Conv2D(
+            32, 5, strides=2, activation="relu")
 
         self.pool1 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))
         self.batchnorm = tf.keras.layers.BatchNormalization()
@@ -25,8 +29,10 @@ class CNN(tf.keras.Model):
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
         self.checkpoint_prefix = os.path.join(checkpoint_directory, "ckpt")
         self.params = params
+        self.build((1, 224, 224, 3))
 
     def call(self, inputs, training):
+        # self.build((1, 224, 224, 3))
 
         x = self.conv1(inputs)
         x = self.pool1(x)
@@ -104,21 +110,26 @@ class CNN(tf.keras.Model):
             # total 8659 images in train folder, 32 batches, 270 steps per epoch
             for step, (x, y) in enumerate(train_data):
                 with tf.GradientTape() as tape:
+                    # print(y)
                     logits = self.call(x, training=True)
+                    # print(logits)
 
                     # Compute the loss value for this minibatch.
                     loss_value = self.loss_fn(y, logits)
 
                 grads = tape.gradient(loss_value, self.trainable_variables)
-                self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+                self.optimizer.apply_gradients(
+                    zip(grads, self.trainable_variables))
 
                 # Update training metric.
                 train_acc_metric.update_state(y, logits)
                 epoch_loss_avg.update_state(loss_value)
 
                 if step % 100 == 0:
-                    print("Training loss (for one batch) at step %d: %.4f" % (step, float(loss_value)))
-                    print("Seen so far: %s samples" % ((step + 1) * self.params.batch_size))
+                    print("Training loss (for one batch) at step %d: %.4f" %
+                          (step, float(loss_value)))
+                    print("Seen so far: %s samples" %
+                          ((step + 1) * self.params.batch_size))
 
                     # Display metrics at the end of each epoch.
             train_acc = train_acc_metric.result()
@@ -134,6 +145,7 @@ class CNN(tf.keras.Model):
 
             # Run a validation loop at the end of each epoch.
             for step, (x_batch_val, y_batch_val) in enumerate(eval_data):
+
                 val_logits = self.call(x_batch_val, training=False)
                 # Update val metrics
                 val_acc_metric.update_state(y_batch_val, val_logits)
