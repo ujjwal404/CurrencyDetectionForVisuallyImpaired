@@ -15,13 +15,17 @@ class CNN(tf.keras.Model):
             32, 3, strides=1, activation="relu")
         self.conv3 = tf.keras.layers.Conv2D(
             32, 5, strides=2, activation="relu")
+        self.conv4 = tf.keras.layers.Conv2D(
+            32, 5, strides=2, activation="relu")
 
         self.pool1 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))
+        self.pool4 = tf.keras.layers.MaxPool2D(pool_size=(2, 2))
+
         self.batchnorm = tf.keras.layers.BatchNormalization()
         self.dropout40 = tf.keras.layers.Dropout(rate=0.4)
 
         self.flatten = tf.keras.layers.Flatten()
-        self.d128 = tf.keras.layers.Dense(128, activation="relu")
+        self.d128 = tf.keras.layers.Dense(512, activation="relu")
         self.d7 = tf.keras.layers.Dense(7)
 
         self.device = device
@@ -39,10 +43,12 @@ class CNN(tf.keras.Model):
         x = self.conv2(x)
         x = self.pool1(x)
         x = self.conv3(x)
+
         x = self.batchnorm(x)
         if training:
             x = self.dropout40(x, training=training)
-
+        x=self.conv4(x)
+        x=self.pool4(x)
         x = self.flatten(x)
         x = self.d128(x)
         x = self.d7(x)
@@ -53,6 +59,7 @@ class CNN(tf.keras.Model):
         return tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y, logits)
 
     def restore_model(self):
+        
         """Function to restore trained model."""
 
     def save_model(self, global_step=0):
@@ -103,7 +110,11 @@ class CNN(tf.keras.Model):
         train_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
         val_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
         epoch_loss_avg = tf.keras.metrics.Mean()
-
+        file1 = open("/home/arvind/Desktop/BTP/CurrencyDetectionForVisuallyImpaired/experiments/traindata.txt", "a")  # append mode
+        # self.load_weights("/experiments/checkpoints/")
+        file2 = open("/home/arvind/Desktop/BTP/CurrencyDetectionForVisuallyImpaired/experiments/valdata.txt","a")
+        checkpoint = tf.train.Checkpoint(model=self)
+        checkpoint.restore("./experiments/checkpoints/ckpt-14")
         for epoch in range(self.params.num_epochs):
             print("\nStart of epoch %d" % (epoch,))
             start_time = time.time()
@@ -134,6 +145,7 @@ class CNN(tf.keras.Model):
                     # Display metrics at the end of each epoch.
             train_acc = train_acc_metric.result()
             print("Training acc over epoch: %.4f" % (float(train_acc),))
+            file1.write(str(float(train_acc))+"\n")
 
             # put vaules in lists
             train_loss_results.append(epoch_loss_avg.result())
@@ -153,8 +165,12 @@ class CNN(tf.keras.Model):
             val_acc_metric.reset_states()
 
             print("Validation acc: %.4f" % (float(val_acc),))
+            file2.write(str(float(val_acc))+"\n")
+
 
             print("Time taken: %.2fs" % (time.time() - start_time))
             self.save_model()
 
+        file1.close()
+        file2.close()
         self.visualize(train_loss_results, train_accuracy_results)

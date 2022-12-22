@@ -16,6 +16,8 @@ def make_model(train_data, eval_data, params):
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         optimizer=tf.keras.optimizers.Adam(learning_rate=params.learning_rate),
     )
+    # checkpoint = tf.train.Checkpoint.restore(model,save_path="./experiments/")
+    # checkpoint.restore("./experiments/checkpoints/")
 
     model.fit_dataset(train_data, eval_data)
     # # save the model
