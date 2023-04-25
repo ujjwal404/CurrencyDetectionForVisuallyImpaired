@@ -1,4 +1,4 @@
-# Currency Detection for Visually Impaired
+# Currency Detection for Visually Impaired 👨‍🦯
 This repo contains code for the CNN model that can be deployed on a RaspberryPi and used for currency detection. [Here](https://youtube.com/shorts/U-Lis5e01yQ?feature=share)'s a demo video of final result.
 
 # Directory details:
@@ -24,7 +24,7 @@ Python3 script.py --labels labels.txt --model model.tflite
 ```
 
 # Dataset 
-The dataset contains 7 different classes of INR notes and can be downloaded from [here](https://drive.google.com/drive/folders/1DhZQdlbaFm0MbX6j9A9vD_jaeh6Dmkoh?usp=sharing).
+The dataset contains 7 different classes of INR notes and can be downloaded from [here](https://data.mendeley.com/datasets/8ckhkssyn3).
 
 
 
