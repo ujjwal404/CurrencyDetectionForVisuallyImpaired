@@ -1,5 +1,7 @@
 # Currency Detection for Visually Impaired 👨‍🦯
-This repo contains code for the CNN model that can be deployed on a RaspberryPi and used for currency detection. [Here](https://youtube.com/shorts/U-Lis5e01yQ?feature=share)'s a demo video of final result.
+This repo contains code for the CNN model that can be deployed on a RaspberryPi and used for currency detection. [Here](https://youtube.com/shorts/U-Lis5e01yQ?feature=share)'s a demo video of final result. 
+
+IEEE citation can be found [here](https://ieeexplore.ieee.org/document/10458734).
 
 # Directory details:
 - `build_dataset.py` : Crops all the images into a defined size and splits the dataset into test,train and validation.
